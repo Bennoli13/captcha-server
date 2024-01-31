@@ -9,7 +9,7 @@ from flask_limiter.util import get_remote_address
 import redis
 
 app = Flask(__name__)
-r = redis.Redis(host='localhost', port=6379, db=0)
+r = redis.Redis(host='captcha-redis', port=6379, db=0)
 
 def get_real_ip():
     if request.headers.getlist("X-Forwarded-For"):
@@ -21,7 +21,7 @@ limiter = Limiter(
     app,
     key_func=get_real_ip,
     default_limits=["200 per day", "50 per hour"],
-    storage_uri="redis://localhost:6379"
+    storage_uri="redis://captcha-redis:6379"
 )
 RATE_LIMIT = "20 per 5 minutes"
 
@@ -114,7 +114,6 @@ def verify_captcha():
     except Exception as e:
         print(f"An error occurred: {type(e).__name__}")
         return jsonify({'result': 'Invalid input or cookie not set'}), 400
-    
     request_uid = request.cookies.get('uid', None)
     
     if not captcha_text or not request_uid:
