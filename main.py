@@ -8,8 +8,12 @@ from flask_limiter import Limiter, RateLimitExceeded
 from flask_limiter.util import get_remote_address
 import redis
 
+#REDIS_HOST = "captcha-redis"
+REDIS_HOST = "localhost"
+RATE_LIMIT = "20 per 5 minutes"
+
 app = Flask(__name__)
-r = redis.Redis(host='captcha-redis', port=6379, db=0)
+r = redis.Redis(host=REDIS_HOST, port=6379, db=0)
 
 def get_real_ip():
     if request.headers.getlist("X-Forwarded-For"):
@@ -21,9 +25,9 @@ limiter = Limiter(
     app,
     key_func=get_real_ip,
     default_limits=["200 per day", "50 per hour"],
-    storage_uri="redis://captcha-redis:6379"
+    storage_uri=f"redis://{REDIS_HOST}:6379"
 )
-RATE_LIMIT = "20 per 5 minutes"
+
 
 def store_captcha(uid, captcha_text):
     # Store the captcha text against the uid in Redis
@@ -107,7 +111,7 @@ def verify_captcha():
         if request.headers['Content-Type'] == 'application/json':
             data = request.get_json()
             captcha_text = data.get('captcha', None)
-        elif request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
+        elif 'application/x-www-form-urlencoded' in request.headers['Content-Type']:
             captcha_text = request.form.get('captcha', None)
     except KeyError as e:
         return jsonify({'result': 'Invalid Content-Type'}), 400
