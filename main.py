@@ -4,10 +4,25 @@ import random
 import string
 import uuid
 from flask import jsonify
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import redis
 
 app = Flask(__name__)
 r = redis.Redis(host='captcha-redis', port=6379, db=0)
+
+def get_real_ip():
+    if request.headers.getlist("X-Forwarded-For"):
+        return request.headers.getlist("X-Forwarded-For")[0]
+    else:
+        return request.remote_addr()
+    
+limiter = Limiter(
+    app,
+    key_func=get_real_ip,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="redis://captcha-redis:6379"
+)
 
 def store_captcha(uid, captcha_text):
     # Store the captcha text against the uid in Redis
@@ -21,6 +36,7 @@ def get_captcha(uid):
     return captcha_text
 
 @app.route('/captcha', methods=['GET'])
+@limiter.limit("10 per 5 minutes")
 def generate_captcha():
     #get uid from cookie
     request_uid = request.cookies.get('uid', None)
@@ -76,6 +92,7 @@ def verify_captcha_input(user_input, captcha_text):
     return True
 
 @app.route('/verify', methods=['POST'])
+@limiter.limit("10 per 5 minutes")
 def verify_captcha():
     #handle json and form data
     if request.headers['Content-Type'] == 'application/json':

@@ -23,6 +23,9 @@ services:
     ports:
       - 80:80
     container_name: captcha-proxy
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - ./logs:/var/log/nginx
 
 networks:
   captcha-network:

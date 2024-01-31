@@ -2,3 +2,4 @@ Flask==1.1.4
 captcha==0.3
 redis==3.5.3
 markupsafe==2.0.1
+Flask-Limiter[redis]==1.4
