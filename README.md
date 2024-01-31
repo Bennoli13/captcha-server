@@ -1,17 +1,17 @@
-# Project Title
+# Captcha Server Project
 
 ## Description
 
-A brief description of what this project does and who it's for.
+This project is a Captcha server built using Flask. It uses Redis to store image data for later verification and NGINX as the service proxy.
 
 ## Installation
 
-Provide step by step series of examples and explanations about how to get a development environment running.
+To get the server running, clone the repository and use Docker Compose to build and run all components:
 
 ```bash
-git clone <repository_link>
-cd <repository_name>
-npm install
+git clone https://github.com/Bennoli13/captcha-server.git
+cd captcha-server
+docker-compose up --build
 ```
 
 ## Usage

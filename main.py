@@ -38,22 +38,29 @@ def get_captcha(uid):
 @app.route('/captcha', methods=['GET'])
 @limiter.limit("10 per 5 minutes")
 def generate_captcha():
-    #get uid from cookie
+    # Get uid from cookie
     request_uid = request.cookies.get('uid', None)
     if not request_uid:
-        return redirect('/')
+        # Generate a random uid
+        request_uid = str(uuid.uuid4())
     
     # Generate a random captcha text
     captcha_text = generate_random_text()
     
-    #store the captcha text in redis
+    # Store the captcha text in Redis
     store_captcha(request_uid, captcha_text)
     
     # Generate captcha image
     captcha_image = generate_captcha_image(captcha_text)
 
-    # Return the captcha image as a response    
-    return captcha_image
+    # Create a response object
+    response = make_response(captcha_image)
+    
+    # Set the cookie
+    response.set_cookie('uid', request_uid)
+    
+    # Return the response
+    return response
 
 def generate_random_text(length=6):
     # Implement your logic to generate a random captcha text here

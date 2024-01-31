@@ -6,17 +6,40 @@
 <body>
     <h1>Flask Captcha Example</h1>
     
-    <form action="/verify" method="POST" enctype="application/json">
+    <form id="captcha_form">
         <label for="captcha">Please enter the captcha:</label>
         <input type="text" id="captcha" name="captcha" required>
-        <img src="/captcha" alt="Captcha Image">
+        <img src="http://127.0.0.1/captcha" alt="Captcha Image">
         <button type="submit">Submit</button>
     </form>
+    <label>HUMAN VERIFICATION STATUS:</label>
+    <p id="status"></p>
 </body>
 <script>
-    
-
+    document.getElementById("captcha_form").addEventListener("submit", function(event) {
+        event.preventDefault();
+        var captchaValue = document.getElementById("captcha").value;
+        // Handle the post request for captcha_form here
+        fetch("http://127.0.0.1/verify", {
+            method: "POST",
+            body: JSON.stringify({
+                captcha: captchaValue
+            }),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.result === true) {
+                document.getElementById("status").innerText = "VERIFIED";
+            } else {
+                document.getElementById("status").innerText = "VERIFICATION FAILED";
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+        });
+    });
 </script>
-
-
 </html>
