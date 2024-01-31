@@ -1,28 +1,29 @@
-from flask import Flask, request, jsonify,render_template, make_response,redirect
+from flask import Flask, request, jsonify,render_template, make_response, redirect
 from captcha.image import ImageCaptcha
 import random
 import string
 import uuid
 from flask import jsonify
-from flask_limiter import Limiter
+from flask_limiter import Limiter, RateLimitExceeded
 from flask_limiter.util import get_remote_address
 import redis
 
 app = Flask(__name__)
-r = redis.Redis(host='captcha-redis', port=6379, db=0)
+r = redis.Redis(host='localhost', port=6379, db=0)
 
 def get_real_ip():
     if request.headers.getlist("X-Forwarded-For"):
         return request.headers.getlist("X-Forwarded-For")[0]
     else:
-        return request.remote_addr()
+        return request.remote_addr
     
 limiter = Limiter(
     app,
     key_func=get_real_ip,
     default_limits=["200 per day", "50 per hour"],
-    storage_uri="redis://captcha-redis:6379"
+    storage_uri="redis://localhost:6379"
 )
+RATE_LIMIT = "20 per 5 minutes"
 
 def store_captcha(uid, captcha_text):
     # Store the captcha text against the uid in Redis
@@ -36,7 +37,7 @@ def get_captcha(uid):
     return captcha_text
 
 @app.route('/captcha', methods=['GET'])
-@limiter.limit("10 per 5 minutes")
+@limiter.limit(RATE_LIMIT)
 def generate_captcha():
     # Get uid from cookie
     request_uid = request.cookies.get('uid', None)
@@ -85,7 +86,7 @@ def generate_captcha_image(text):
     # Or to convert it to bytes and return it as a response:
     return image.getvalue(), 200, {'Content-Type': 'image/png'}
 
-def verify_captcha_input(user_input, captcha_text):
+def verify_captcha_input(user_input="", captcha_text=""):
     if len(user_input) != len(captcha_text):
         return False
 
@@ -99,23 +100,40 @@ def verify_captcha_input(user_input, captcha_text):
     return True
 
 @app.route('/verify', methods=['POST'])
-@limiter.limit("10 per 5 minutes")
+@limiter.limit(RATE_LIMIT)
 def verify_captcha():
     #handle json and form data
-    if request.headers['Content-Type'] == 'application/json':
-        data = request.get_json()
-        captcha_text = data.get('captcha', None)
-    else:
-        captcha_text = request.form.get('captcha', None)
+    try:
+        if request.headers['Content-Type'] == 'application/json':
+            data = request.get_json()
+            captcha_text = data.get('captcha', None)
+        elif request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
+            captcha_text = request.form.get('captcha', None)
+    except KeyError as e:
+        return jsonify({'result': 'Invalid Content-Type'}), 400
+    except Exception as e:
+        print(f"An error occurred: {type(e).__name__}")
+        return jsonify({'result': 'Invalid input or cookie not set'}), 400
+    
     request_uid = request.cookies.get('uid', None)
+    
     if not captcha_text or not request_uid:
-        return redirect('/')
+        return jsonify({'result': 'Invalid input or cookie not set'}), 400
+    
     #get captcha text from redis
     captcha_text_from_redis = get_captcha(request_uid)
+    
+    if captcha_text_from_redis is None:
+        return jsonify({'result': 'Captcha expired, reload the /captcha page'}), 400
     
     result = verify_captcha_input(captcha_text, captcha_text_from_redis) 
     # Return True if the user_text is same as captcha_text, else return False
     return jsonify({'result': result})
+
+@app.errorhandler(RateLimitExceeded)
+def ratelimit_handler(e):
+    user_ip = get_real_ip()
+    return jsonify({'result': 'Rate limit exceeded {}'.format(user_ip)}), 429
 
 @app.route('/', methods=['GET'])
 def load_captcha():

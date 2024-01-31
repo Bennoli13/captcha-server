@@ -1,26 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Flask Captcha Example</title>
+    <title>CAPTCHA HTML EXAMPLE</title>
 </head>
 <body>
-    <h1>Flask Captcha Example</h1>
+    <h1>HTML Captcha Example</h1>
     
     <form id="captcha_form">
         <label for="captcha">Please enter the captcha:</label>
         <input type="text" id="captcha" name="captcha" required>
-        <img src="http://127.0.0.1/captcha" alt="Captcha Image">
+        <img id="captcha_image" src="/captcha" alt="Captcha Image">
         <button type="submit">Submit</button>
+        <button type="button" onclick="reloadCaptcha()">Reload</button>
     </form>
-    <label>HUMAN VERIFICATION STATUS:</label>
-    <p id="status"></p>
+    <br>
+    <label><strong>HUMAN VERIFICATION STATUS:</strong></label>
+    <label id="status"></label>
 </body>
 <script>
+    function reloadCaptcha() {
+        var captchaImage = document.getElementById("captcha_image");
+        captchaImage.src = "/captcha?" + new Date().getTime();
+    }
+
     document.getElementById("captcha_form").addEventListener("submit", function(event) {
         event.preventDefault();
         var captchaValue = document.getElementById("captcha").value;
         // Handle the post request for captcha_form here
-        fetch("http://127.0.0.1/verify", {
+        fetch("/verify", {
             method: "POST",
             body: JSON.stringify({
                 captcha: captchaValue
@@ -33,8 +40,10 @@
         .then(data => {
             if (data.result === true) {
                 document.getElementById("status").innerText = "VERIFIED";
+                reloadCaptcha();
             } else {
                 document.getElementById("status").innerText = "VERIFICATION FAILED";
+                reloadCaptcha();
             }
         })
         .catch(error => {
