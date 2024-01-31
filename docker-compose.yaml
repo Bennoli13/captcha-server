@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  python:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    networks:
+      - captcha-network
+    container_name: captcha-services
+
+  redis:
+    restart: always
+    image: redis
+    networks:
+      - captcha-network
+    container_name: captcha-redis
+
+  nginx:
+    image: nginx
+    networks :
+      - captcha-network
+    ports:
+      - 80:80
+    container_name: captcha-proxy
+
+networks:
+  captcha-network:
