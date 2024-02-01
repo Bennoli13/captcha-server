@@ -8,8 +8,7 @@ from flask_limiter import Limiter, RateLimitExceeded
 from flask_limiter.util import get_remote_address
 import redis
 
-#REDIS_HOST = "captcha-redis"
-REDIS_HOST = "localhost"
+REDIS_HOST = "captcha-redis"
 RATE_LIMIT = "20 per 5 minutes"
 
 app = Flask(__name__)

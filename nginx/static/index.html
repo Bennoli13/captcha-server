@@ -8,7 +8,7 @@
     <script>
         function reloadCaptcha() {
             // Reload captcha image
-            $('#captcha-image').attr('src', 'http://127.0.0.1:5000/captcha');
+            $('#captcha-image').attr('src', '/captcha');
         }
 
         function submitLogin() {
@@ -19,7 +19,7 @@
 
             // Make AJAX request to captcha service
             $.ajax({
-                url: 'http://127.0.0.1:5000/verify',
+                url: '/verify',
                 type: 'POST',
                 data: { captcha: captcha },
                 success: function(response) {
@@ -50,7 +50,7 @@
         <input type="password" id="password" name="password" required><br>
         <label for="captcha">Captcha:</label>
         <input type="text" id="captcha" name="captcha" required>
-        <img id="captcha-image" src="http://127.0.0.1:5000/captcha" alt="Captcha Image"><br>
+        <img id="captcha-image" src="/captcha" alt="Captcha Image"><br>
         <button type="button" onclick="submitLogin()">Submit</button>
     </form>
     <p id="error-message"></p>
