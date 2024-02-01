@@ -1,14 +1,14 @@
-<!-- FILEPATH: /Users/ben/Documents/GitHub/captcha-server/templates/login.html -->
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>Login</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         function reloadCaptcha() {
             // Reload captcha image
-            $('#captcha-image').attr('src', '/captcha');
+            var timestamp = new Date().getTime();
+            $('#captcha-image').attr('src', '/captcha?_=' + timestamp);
         }
 
         function submitLogin() {
@@ -24,17 +24,17 @@
                 data: { captcha: captcha },
                 success: function(response) {
                     if (response.result) {
-                        // Captcha is correct, submit login form
-                        $('#login-form').submit();
+                        // Captcha is correct, redirect to success page
+                        window.location.href = '/success.html';
                     } else {
                         // Captcha is wrong, show error message and reload captcha
-                        $('#error-message').text('Invalid captcha. Please try again.');
                         reloadCaptcha();
+                        $('#error-message').text('Invalid captcha. Please try again.').show();
                     }
                 },
                 error: function() {
                     // Error occurred, show error message and reload captcha
-                    $('#error-message').text('An error occurred. Please try again.');
+                    $('#error-message').text('An error occurred. Please try again.').show();
                     reloadCaptcha();
                 }
             });
@@ -42,17 +42,32 @@
     </script>
 </head>
 <body>
-    <h1>Login</h1>
-    <form id="login-form" action="/login" method="POST">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required><br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br>
-        <label for="captcha">Captcha:</label>
-        <input type="text" id="captcha" name="captcha" required>
-        <img id="captcha-image" src="/captcha" alt="Captcha Image"><br>
-        <button type="button" onclick="submitLogin()">Submit</button>
-    </form>
-    <p id="error-message"></p>
+    <div class="container mt-5">
+        <h1 class="text-center">Login</h1>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <form id="login-form" class="mt-4">
+                    <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" name="username" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="captcha">Captcha:</label>
+                        <input type="text" id="captcha" name="captcha" class="form-control" required>
+                        <div class="mt-2">
+                            <img id="captcha-image" src="/captcha" alt="Captcha Image">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="reloadCaptcha()">&#8635;</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="submitLogin()">Submit</button>
+                </form>
+                <p id="error-message" class="mt-2 text-danger" style="display: none;"></p>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
