@@ -1,32 +1,52 @@
-version: '3.8'
-services:
-  python:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: always
-    networks:
-      - captcha-network
-    container_name: captcha-services
-
-  redis:
-    restart: always
-    image: redis
-    networks:
-      - captcha-network
-    container_name: captcha-redis
-
-  nginx:
-    image: nginx
-    networks :
-      - captcha-network
-    ports:
-      - 80:80
-    container_name: captcha-proxy
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/static:/usr/share/nginx/html
-      - ./logs:/var/log/nginx
-
-networks:
-  captcha-network:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: captcha-services
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: captcha-services
+  template:
+    metadata:
+      labels:
+        app: captcha-services
+    spec:
+      containers:
+      - name: python
+        image: bennoli13/captcha-services
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+      - name: redis
+        image: redis
+        ports:
+        - containerPort: 6379
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-conf
+          mountPath: /etc/nginx/conf.d
+        - name: nginx-static
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: nginx-conf
+        hostPath:
+          path: ./nginx/conf.d
+      - name: nginx-static
+        hostPath:
+          path: ./nginx/static/static
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: captcha-services
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: captcha-services
