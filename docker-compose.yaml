@@ -24,7 +24,8 @@ services:
       - 80:80
     container_name: captcha-proxy
     volumes:
-      - ./nginx:/etc/nginx/conf.d
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/static:/usr/share/nginx/html
       - ./logs:/var/log/nginx
 
 networks:

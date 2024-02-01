@@ -138,15 +138,6 @@ def ratelimit_handler(e):
     user_ip = get_real_ip()
     return jsonify({'result': 'Rate limit exceeded {}'.format(user_ip)}), 429
 
-@app.route('/', methods=['GET'])
-def load_captcha():
-    # Generate a random uid
-    uid = str(uuid.uuid4())
-    response = make_response(render_template('captcha.html'))
-    # Set cookie for captcha
-    response.set_cookie('uid', uid)
-    return response
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0',port=5000,debug=False)
    
